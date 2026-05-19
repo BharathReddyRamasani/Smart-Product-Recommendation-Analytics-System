@@ -131,7 +131,10 @@ class ContentBasedRecommender:
         if not self._is_fitted or not interacted_product_ids:
             return []
 
-        exclude = set(exclude_product_ids or []) | set(interacted_product_ids)
+        if exclude_product_ids is not None:
+            exclude = set(exclude_product_ids)
+        else:
+            exclude = set(interacted_product_ids)
         score_accumulator: dict[int, float] = {}
 
         for source_pid in interacted_product_ids:

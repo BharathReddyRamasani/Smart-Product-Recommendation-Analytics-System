@@ -119,15 +119,16 @@ class SVDRecommender:
         u_idx = self._user_index[user_id]
         predicted_scores = self._predicted_matrix[u_idx]
 
-        exclude = set(exclude_product_ids or [])
-
-        # Products already interacted with
-        if self._user_item_matrix is not None:
+        if exclude_product_ids is not None:
+            exclude = set(exclude_product_ids)
+        elif self._user_item_matrix is not None:
             seen = set(
                 self._product_ids[j]
                 for j in np.nonzero(self._user_item_matrix[u_idx])[0]
             )
-            exclude.update(seen)
+            exclude = seen
+        else:
+            exclude = set()
 
         results: list[tuple[str, float]] = []
         for j, score in enumerate(predicted_scores):

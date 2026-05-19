@@ -199,6 +199,7 @@ class MLEngine:
         user_id: str,
         k: int = 10,
         strategy: str = "auto",
+        exclude_product_ids: list[str] = None,
     ) -> tuple[list[tuple[str, float]], str]:
         """
         Returns (product_id_score_list, strategy_name).
@@ -213,7 +214,7 @@ class MLEngine:
 
         n = self._interaction_count(user_id)
         interacted = self._interacted_products(user_id)
-        exclude = set(interacted)
+        exclude = set(exclude_product_ids) if exclude_product_ids is not None else set(interacted)
 
         if strategy == "auto":
             if n < COLD_START_THRESHOLD:
@@ -224,26 +225,26 @@ class MLEngine:
                 strategy = "hybrid"
 
         if strategy == "popularity":
-            results = self._popularity.recommend(k=k, exclude_product_ids=interacted)
+            results = self._popularity.recommend(k=k, exclude_product_ids=list(exclude))
             return results, "popularity"
 
         if strategy == "content":
             results = self._content_based.recommend_for_user(
-                interacted_product_ids=interacted, k=k, exclude_product_ids=interacted
+                interacted_product_ids=interacted, k=k, exclude_product_ids=list(exclude)
             )
             if not results:
-                results = self._popularity.recommend(k=k, exclude_product_ids=interacted)
+                results = self._popularity.recommend(k=k, exclude_product_ids=list(exclude))
                 return results, "popularity"
             return results, "content"
 
         if strategy == "hybrid":
-            cf = self._collaborative.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=interacted)
+            cf = self._collaborative.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
             if not cf:
-                cf = self._svd.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=interacted)
+                cf = self._svd.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
             content = self._content_based.recommend_for_user(
-                interacted_product_ids=interacted, k=k * 2, exclude_product_ids=interacted
+                interacted_product_ids=interacted, k=k * 2, exclude_product_ids=list(exclude)
             )
-            popular = self._popularity.recommend(k=k * 2, exclude_product_ids=interacted)
+            popular = self._popularity.recommend(k=k * 2, exclude_product_ids=list(exclude))
             merged = self._merge_hybrid(cf, content, popular, k=k)
             if not merged:
                 merged = popular[:k]
@@ -252,16 +253,16 @@ class MLEngine:
 
         # Explicit strategy overrides
         if strategy == "collaborative":
-            results = self._collaborative.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=interacted)
+            results = self._collaborative.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=list(exclude))
             if not results:
-                results = self._svd.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=interacted)
-            return results or self._popularity.recommend(k=k, exclude_product_ids=interacted), "collaborative"
+                results = self._svd.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=list(exclude))
+            return results or self._popularity.recommend(k=k, exclude_product_ids=list(exclude)), "collaborative"
 
         if strategy == "svd":
-            results = self._svd.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=interacted)
-            return results or self._popularity.recommend(k=k, exclude_product_ids=interacted), "svd"
+            results = self._svd.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=list(exclude))
+            return results or self._popularity.recommend(k=k, exclude_product_ids=list(exclude)), "svd"
 
-        return self._popularity.recommend(k=k, exclude_product_ids=interacted), "popularity"
+        return self._popularity.recommend(k=k, exclude_product_ids=list(exclude)), "popularity"
 
     def recommend_similar_products(
         self, product_id: str, k: int = 10
@@ -282,8 +283,8 @@ class MLEngine:
             if pid not in user_products[uid]:
                 user_products[uid].append(pid)
 
-        def recommender_fn(uid, top_k):
-            return self.recommend_for_user(uid, k=top_k, strategy="hybrid")[0]
+        def recommender_fn(uid, top_k, train_items=None):
+            return self.recommend_for_user(uid, k=top_k, strategy="hybrid", exclude_product_ids=train_items)[0]
 
         metrics = evaluate_recommendations(user_products, recommender_fn, k=k)
         metrics["k"] = k

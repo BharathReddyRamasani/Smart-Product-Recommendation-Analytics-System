@@ -89,9 +89,14 @@ def evaluate_recommendations(
 
         n_test = max(1, int(len(product_ids) * test_ratio))
         ground_truth = set(product_ids[-n_test:])  # Last N as ground truth
+        train_items = product_ids[:-n_test]
 
         try:
-            recs = recommender_fn(user_id, k)
+            try:
+                recs = recommender_fn(user_id, k, train_items)
+            except TypeError:
+                recs = recommender_fn(user_id, k)
+
             if not recs:
                 continue
             rec_ids = [pid for pid, _ in recs]

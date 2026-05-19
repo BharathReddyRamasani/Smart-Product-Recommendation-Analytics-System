@@ -12,6 +12,7 @@ import Recommendations from './pages/Recommendations'
 import Cart from './pages/Cart'
 import Orders from './pages/Orders'
 import Profile from './pages/Profile'
+import Dashboard from './pages/Dashboard'
 
 function AppRoutes() {
   const { logout } = useAuth()
@@ -33,6 +34,7 @@ function AppRoutes() {
       <Route path="/explore" element={<ProtectedRoute><Navbar /><ExploreProducts /></ProtectedRoute>} />
       <Route path="/products/:id" element={<ProtectedRoute><Navbar /><ProductDetail /></ProtectedRoute>} />
       <Route path="/recommendations" element={<ProtectedRoute><Navbar /><Recommendations /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
       <Route path="/cart" element={<ProtectedRoute><Navbar /><Cart /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><Navbar /><Orders /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /></ProtectedRoute>} />

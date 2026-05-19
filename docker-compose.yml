@@ -1,6 +1,15 @@
 version: "3.9"
 
 services:
+  mongodb:
+    image: mongo:6.0
+    container_name: recommendations-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -9,12 +18,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./recommendation.db
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DB_NAME=recommendation_db
+      - SECRET_KEY=docker-secret-key-123456
       - SEED_ON_STARTUP=true
       - LOG_LEVEL=INFO
       - CORS_ORIGINS=http://localhost:3000,http://localhost:80
-    volumes:
-      - backend-data:/app
+    depends_on:
+      - mongodb
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -36,4 +47,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  backend-data:
+  mongo-data:

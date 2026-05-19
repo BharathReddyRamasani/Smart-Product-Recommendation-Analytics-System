@@ -115,13 +115,14 @@ class CollaborativeFilteringRecommender:
         similar_indices = np.argsort(sim_row)[::-1]
         similar_indices = similar_indices[similar_indices != u_idx][:n_similar_users]
 
-        exclude = set(exclude_product_ids or [])
-        # Products already interacted with by target user
-        seen_products = set(
-            self._product_ids[j]
-            for j in np.nonzero(self._user_item_matrix[u_idx])[0]
-        )
-        exclude.update(seen_products)
+        if exclude_product_ids is not None:
+            exclude = set(exclude_product_ids)
+        else:
+            seen_products = set(
+                self._product_ids[j]
+                for j in np.nonzero(self._user_item_matrix[u_idx])[0]
+            )
+            exclude = seen_products
 
         # Weighted aggregation of scores from similar users
         score_accumulator: dict[str, float] = defaultdict(float)
