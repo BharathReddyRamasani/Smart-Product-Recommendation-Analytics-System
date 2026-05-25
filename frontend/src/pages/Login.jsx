@@ -133,8 +133,8 @@ export default function Login() {
           </form>
 
           {mode === 'login' && (
-            <p className="text-center text-xs text-gray-600 mt-4">
-              Seed users can login with any seeded email and password: <span className="text-gray-400">password123</span>
+            <p className="text-center text-xs text-gray-500 mt-4">
+              Demo Login: <span className="text-gray-300 font-semibold">john.doe@example.com</span> / <span className="text-gray-300 font-semibold">password123</span>
             </p>
           )}
         </div>

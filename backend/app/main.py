@@ -31,6 +31,22 @@ async def lifespan(app: FastAPI):
         from app.utils.seed_data import seed_database
         seed_database(db)
 
+    # Ensure demo user 'john.doe@example.com' exists for demo purposes
+    demo_user = db.users.find_one({"email": "john.doe@example.com"})
+    if not demo_user:
+        from app.utils.auth import hash_password
+        from datetime import datetime
+        db.users.insert_one({
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "password_hash": hash_password("password123"),
+            "age": 30,
+            "location": "New York, NY",
+            "created_at": datetime.utcnow(),
+            "is_seed": True
+        })
+        logger.info("Demo user 'john.doe@example.com' created on startup.")
+
     # Train ML models using existing MongoDB data
     ml_engine.fit(db)
     logger.info("=== System Ready ===")
@@ -99,14 +115,16 @@ async def global_exception_handler(request: Request, exc: Exception):
         content=_format_error(500, "An unexpected error occurred. Please try again later.", request)
     )
 
-cors_origins = [o.strip() for o in os.getenv(
-    "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
-).split(",")]
+_cors_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173")
+if _cors_env.strip() == "*":
+    cors_origins = ["*"]
+else:
+    cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
+    allow_credentials=True if cors_origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

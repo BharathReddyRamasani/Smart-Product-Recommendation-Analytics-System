@@ -23,7 +23,7 @@ services:
       - SECRET_KEY=docker-secret-key-123456
       - SEED_ON_STARTUP=true
       - LOG_LEVEL=INFO
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:80
+      - CORS_ORIGINS=*
     depends_on:
       - mongodb
     healthcheck:
@@ -38,6 +38,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000
     container_name: recommendations-frontend
     ports:
       - "3000:80"

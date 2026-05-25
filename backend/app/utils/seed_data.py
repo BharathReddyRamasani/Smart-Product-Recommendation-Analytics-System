@@ -257,6 +257,17 @@ def seed_database(db) -> None:
     seed_users = list(db.users.find({"is_seed": True}))
     if len(seed_users) == 0:
         user_docs = []
+        # Explicitly add the default demo user
+        user_docs.append({
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "password_hash": hashed_pw,
+            "age": 30,
+            "location": "New York, NY",
+            "created_at": datetime.utcnow() - timedelta(days=365),
+            "is_seed": True
+        })
+
         for i, name in enumerate(FIRST_NAMES[:50]):
             domain = random.choice(["gmail.com", "yahoo.com", "outlook.com"])
             user_docs.append({
