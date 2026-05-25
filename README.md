@@ -6,8 +6,8 @@
 
 ## 🌟 Live Demo
 
-*   **Frontend Web App**: [https://smart-product-recommendation-analytics-pnpt.onrender.com](https://smart-product-recommendation-analytics-pnpt.onrender.com)
-*   **Backend API Service**: [https://smart-product-recommendation-analytics.onrender.com](https://smart-product-recommendation-analytics.onrender.com)
+*   **Frontend Web App**: [https://smart-product-recommendation-analytics-pnpt.onrender.com](https://smart-product-recommendation-analytics-pnpf.onrender.com/)
+*   **Backend API Service**: [https://smart-product-recommendation-analytics.onrender.com](https://smart-product-recommendation-analytics.onrender.com/)
 *   **Interactive API Docs**: [https://smart-product-recommendation-analytics.onrender.com/docs](https://smart-product-recommendation-analytics.onrender.com/docs)
 *   **Demo Login Credentials**:
     *   **Email**: `john.doe@example.com`
