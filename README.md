@@ -1,5 +1,13 @@
-# Smart Product Recommendation & Analytics System
+---
+title: AI Powered Conversational Commerce Platform
+emoji: 🛍️
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
 
+# Smart Product Recommendation & Analytics System
 > **Hybrid Recommendation Platform with Personalized Product Discovery and Real-Time User Interaction Tracking**
 
 ---
