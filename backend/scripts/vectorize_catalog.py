@@ -106,14 +106,19 @@ def vectorize_catalog(db=None):
 
     print("Storing documents in ChromaDB using default local embedding function (no API key needed)...")
     
+    import gc
+    import time
     # ChromaDB will automatically compute embeddings locally using onnxruntime
-    for i in range(0, len(docs), 100):
-        print(f"Adding batch {i} to {i+100}...")
+    # Using small batch sizes to prevent out-of-memory (OOM) errors on Render's 512MB free tier
+    for i in range(0, len(docs), 25):
+        print(f"Adding batch {i} to {i+25}...")
         collection.add(
-            documents=docs[i:i+100],
-            metadatas=metadatas[i:i+100],
-            ids=ids[i:i+100]
+            documents=docs[i:i+25],
+            metadatas=metadatas[i:i+25],
+            ids=ids[i:i+25]
         )
+        gc.collect()
+        time.sleep(1)
     
     print("Successfully vectorized and stored the product catalog in ChromaDB!")
     if close_at_end:

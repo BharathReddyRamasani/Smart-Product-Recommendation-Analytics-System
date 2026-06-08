@@ -62,7 +62,6 @@ async def lifespan(app: FastAPI):
     # Train ML models using existing MongoDB data
     ml_engine.fit(db)
     logger.info("=== System Ready ===")
-    
     # Run vectorization in the background so it doesn't block the startup (important for Render)
     from app.services.rag_service import rag_service
     import asyncio
@@ -77,7 +76,7 @@ async def lifespan(app: FastAPI):
             
             if rag_service.collection is None or getattr(rag_service.collection, "count", lambda: 0)() == 0:
                 logger.info("Starting background vectorization task for ChromaDB...")
-                # Run the 3-minute blocking script in a separate thread
+                # Run the blocking script in a separate thread
                 await asyncio.to_thread(vectorize_catalog, None)
                 
                 # Re-load the newly created collection into the rag_service

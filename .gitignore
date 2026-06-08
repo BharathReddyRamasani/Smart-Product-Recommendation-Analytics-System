@@ -30,4 +30,3 @@ backend/app/ml/models/*.pkl
 backend/app/ml/models/*.joblib
 chroma_db/
 backend/chroma_db/
-backend/scripts/chroma_db/  
