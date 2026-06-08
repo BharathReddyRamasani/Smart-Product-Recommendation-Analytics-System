@@ -189,15 +189,25 @@ def health_check():
     )
 
 
-@app.get("/", tags=["System"])
-def root():
-    return {
-        "message": "Smart Product Recommendation System v2.0",
-        "docs": "/docs",
-        "health": "/health",
-        "auth": {"signup": "POST /api/v1/auth/signup", "login": "POST /api/v1/auth/login"},
-        "public": ["GET /api/v1/products", "GET /api/v1/products/{id}"],
-        "protected": ["GET /api/v1/home", "GET /api/v1/recommend/user",
-                      "GET /api/v1/cart", "POST /api/v1/orders/place"],
-    }
-# trigger reload
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Mount the static directory for assets (CSS, JS, images)
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+
+    # Catch-all route to serve the React index.html for all non-API routes
+    @app.get("/{catchall:path}", tags=["System"])
+    def serve_react_app(catchall: str):
+        if catchall.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
+        return FileResponse(os.path.join(static_dir, "index.html"))
+else:
+    @app.get("/", tags=["System"])
+    def root():
+        return {
+            "message": "Smart Product Recommendation System API (Frontend not built)",
+            "docs": "/docs",
+        }
