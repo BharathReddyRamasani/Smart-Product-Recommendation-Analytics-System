@@ -17,4 +17,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://Bharath2769:$HF_TOKEN@huggingface.co/spaces/Bharath2769/AI-Powered-Conversational-Commerce-Platform main
+        run: git push --force https://Bharath2769:$HF_TOKEN@huggingface.co/spaces/Bharath2769/AI-Powered-Conversational-Commerce-Platform main
