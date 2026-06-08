@@ -14,7 +14,25 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Push to hub
+      - name: Push clean snapshot to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://Bharath2769:$HF_TOKEN@huggingface.co/spaces/Bharath2769/AI-Powered-Conversational-Commerce-Platform main
+        run: |
+          # Remove GitHub history to prevent pushing old binary blobs
+          rm -rf .git
+          git init
+          git checkout -b main
+          
+          # Remove unnecessary large binary files
+          rm -f backend/app.zip backend/recommendation.db
+          
+          # Setup Git LFS for images
+          git lfs install
+          git lfs track "*.png" "*.jpg" "*.jpeg"
+          
+          # Commit and force push to Hugging Face
+          git config user.email "bot@huggingface.co"
+          git config user.name "Hugging Face Sync Bot"
+          git add .
+          git commit -m "Sync codebase to Hugging Face Space"
+          git push --force https://Bharath2769:$HF_TOKEN@huggingface.co/spaces/Bharath2769/AI-Powered-Conversational-Commerce-Platform main
