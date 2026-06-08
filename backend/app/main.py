@@ -76,8 +76,8 @@ async def lifespan(app: FastAPI):
             
             if rag_service.collection is None or getattr(rag_service.collection, "count", lambda: 0)() == 0:
                 logger.info("Starting background vectorization task for ChromaDB...")
-                # Run the blocking script in a separate thread
-                await asyncio.to_thread(vectorize_catalog, db)
+                # Run the blocking script in a separate thread, sharing the DB and ChromaDB instances
+                await asyncio.to_thread(vectorize_catalog, db, rag_service.chroma_client)
                 
                 # Re-load the newly created collection into the rag_service
                 rag_service.collection = rag_service.chroma_client.get_collection("product_catalog")

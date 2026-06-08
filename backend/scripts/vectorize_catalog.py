@@ -47,7 +47,7 @@ def get_embeddings(texts: list) -> list:
     raise Exception("Failed to get embeddings after 5 retries.")
 
 
-def vectorize_catalog(db=None):
+def vectorize_catalog(db=None, chroma_client=None):
     close_at_end = False
     if db is None:
         print("Connecting to MongoDB...")
@@ -64,9 +64,10 @@ def vectorize_catalog(db=None):
         return
 
     print("Initializing ChromaDB...")
-    from chromadb.config import Settings
-    chroma_db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
-    chroma_client = chromadb.PersistentClient(path=chroma_db_dir, settings=Settings(anonymized_telemetry=False))
+    if chroma_client is None:
+        from chromadb.config import Settings
+        chroma_db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
+        chroma_client = chromadb.PersistentClient(path=chroma_db_dir, settings=Settings(anonymized_telemetry=False))
     
     try:
         chroma_client.delete_collection(name="product_catalog")
