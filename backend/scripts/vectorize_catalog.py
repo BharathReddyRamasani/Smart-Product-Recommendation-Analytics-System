@@ -11,10 +11,9 @@ from app.utils.database import connect_to_mongo, close_mongo
 # Load environment variables
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not API_KEY:
-    print("ERROR: GEMINI_API_KEY is not set in the environment.")
-    sys.exit(1)
+    print("WARNING: GEMINI_API_KEY is not set in the environment. Vectorization will fail if attempted.")
 
 import chromadb
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
