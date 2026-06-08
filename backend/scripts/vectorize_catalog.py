@@ -104,28 +104,22 @@ def vectorize_catalog(db=None):
         })
         ids.append(str(prod.get("_id")))
 
-    print(f"Embedding {len(docs)} products via Gemini REST API in batches...")
+    print("Storing documents in ChromaDB using default local embedding function (no API key needed)...")
     
-    all_embeddings = []
-    batch_size = 50
-    
-    for i in range(0, len(docs), batch_size):
-        batch_docs = docs[i:i+batch_size]
-        print(f"Processing batch {i//batch_size + 1}/{(len(docs) + batch_size - 1)//batch_size} (products {i+1} to {min(i+batch_size, len(docs))})...")
-        embeddings = get_embeddings(batch_docs)
-        all_embeddings.extend(embeddings)
-        time.sleep(2) # Avoid hitting minute limits too quickly
-        
-    print("Storing embeddings in ChromaDB...")
-    
-    # ChromaDB add has a batch limit too, but usually it's ~100-5000. Let's do batches of 100
-    for i in range(0, len(docs), 100):
+    import gc
+    import time
+    # ChromaDB will automatically compute embeddings locally using onnxruntime
+    # Using small batch sizes to prevent out-of-memory (OOM) errors on Render's 512MB free tier
+    for i in range(0, len(docs), 2):
+        if i % 50 == 0:
+            print(f"Adding batch {i} to {i+2}...")
         collection.add(
-            documents=docs[i:i+100],
-            embeddings=all_embeddings[i:i+100],
-            metadatas=metadatas[i:i+100],
-            ids=ids[i:i+100]
+            documents=docs[i:i+2],
+            metadatas=metadatas[i:i+2],
+            ids=ids[i:i+2]
         )
+        gc.collect()
+        time.sleep(0.1)
     
     print("Successfully vectorized and stored the product catalog in ChromaDB!")
     if close_at_end:
