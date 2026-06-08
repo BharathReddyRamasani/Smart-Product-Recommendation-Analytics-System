@@ -48,16 +48,20 @@ def get_embeddings(texts: list) -> list:
     raise Exception("Failed to get embeddings after 5 retries.")
 
 
-def vectorize_catalog():
-    print("Connecting to MongoDB...")
-    db = connect_to_mongo()
+def vectorize_catalog(db=None):
+    close_at_end = False
+    if db is None:
+        print("Connecting to MongoDB...")
+        db = connect_to_mongo()
+        close_at_end = True
     
     products = list(db.products.find({}))
     print(f"Found {len(products)} products in MongoDB.")
     
     if not products:
         print("No products found. Please seed the database first.")
-        close_mongo()
+        if close_at_end:
+            close_mongo()
         return
 
     print("Initializing ChromaDB...")
@@ -125,7 +129,8 @@ def vectorize_catalog():
         )
     
     print("Successfully vectorized and stored the product catalog in ChromaDB!")
-    close_mongo()
+    if close_at_end:
+        close_mongo()
 
 if __name__ == "__main__":
     vectorize_catalog()

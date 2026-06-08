@@ -62,6 +62,32 @@ async def lifespan(app: FastAPI):
     # Train ML models using existing MongoDB data
     ml_engine.fit(db)
     logger.info("=== System Ready ===")
+    
+    # Run vectorization in the background so it doesn't block the startup (important for Render)
+    from app.services.rag_service import rag_service
+    import asyncio
+    
+    async def vectorize_in_background():
+        try:
+            import sys
+            scripts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts")
+            if scripts_path not in sys.path:
+                sys.path.append(scripts_path)
+            from vectorize_catalog import vectorize_catalog
+            
+            if rag_service.collection is None or getattr(rag_service.collection, "count", lambda: 0)() == 0:
+                logger.info("Starting background vectorization task for ChromaDB...")
+                # Run the 3-minute blocking script in a separate thread
+                await asyncio.to_thread(vectorize_catalog, None)
+                
+                # Re-load the newly created collection into the rag_service
+                rag_service.collection = rag_service.chroma_client.get_collection("product_catalog")
+                logger.info("Background vectorization task complete! AI Chat Assistant is now fully functional.")
+        except Exception as e:
+            logger.error(f"Background vectorization failed: {e}")
+
+    asyncio.create_task(vectorize_in_background())
+    
     yield
     close_mongo()
     logger.info("=== System Stopped ===")
