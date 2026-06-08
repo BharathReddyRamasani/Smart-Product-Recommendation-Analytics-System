@@ -93,7 +93,7 @@ class RAGService:
             self.collection = None
             print(f"Warning: RAGService couldn't load 'product_catalog' collection. {e}")
 
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY", "")
         self.embeddings = RESTGeminiEmbeddings(api_key=api_key)
         self.llm = RESTGeminiChat(
             api_key=api_key,
