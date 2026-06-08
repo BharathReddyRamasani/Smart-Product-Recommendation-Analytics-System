@@ -126,15 +126,20 @@ PRICE_RANGES = {
     "Toys": (9.99, 149.99),
 }
 
-def append_seed_data():
-    db = connect_to_mongo()
+def append_seed_data(db=None):
+    close_at_end = False
+    if db is None:
+        db = connect_to_mongo()
+        close_at_end = True
+        
     logger.info("Appending new seed data for expanded categories...")
     random.seed(123)
 
     users = list(db.users.find({}, {"_id": 1}))
     if not users:
         logger.error("No users found! Please run the original seed_data.py first.")
-        close_mongo()
+        if close_at_end:
+            close_mongo()
         return
 
     user_ids = [str(u["_id"]) for u in users]
@@ -207,8 +212,10 @@ def append_seed_data():
     db.interactions.insert_many(interactions)
     logger.info(f"Appended {len(interactions)} new interactions.")
 
-    close_mongo()
+    if close_at_end:
+        close_mongo()
     logger.info("Append seed data script complete!")
 
 if __name__ == "__main__":
     append_seed_data()
+

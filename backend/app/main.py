@@ -31,6 +31,18 @@ async def lifespan(app: FastAPI):
         from app.utils.seed_data import seed_database
         seed_database(db)
 
+    # Append expanded catalog if it's not present
+    if db.products.count_documents({}) <= 100:
+        import sys
+        scripts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts")
+        if scripts_path not in sys.path:
+            sys.path.append(scripts_path)
+        try:
+            from append_seed_data import append_seed_data
+            append_seed_data(db)
+        except Exception as e:
+            logger.error(f"Failed to append seed data: {e}")
+
     # Ensure demo user 'john.doe@example.com' exists for demo purposes
     demo_user = db.users.find_one({"email": "john.doe@example.com"})
     if not demo_user:
