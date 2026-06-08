@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
-
+import ChatAssistant from './components/ChatAssistant'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import ExploreProducts from './pages/ExploreProducts'
@@ -15,7 +15,7 @@ import Profile from './pages/Profile'
 import Dashboard from './pages/Dashboard'
 
 function AppRoutes() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
 
   // Listen for 401 (token expired) events from the API layer
   useEffect(() => {
@@ -25,6 +25,7 @@ function AppRoutes() {
   }, [logout])
 
   return (
+    <>
     <Routes>
       {/* Public */}
       <Route path="/login" element={<Login />} />
@@ -42,6 +43,8 @@ function AppRoutes() {
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    {user && <ChatAssistant />}
+    </>
   )
 }
 

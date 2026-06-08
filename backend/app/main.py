@@ -13,7 +13,7 @@ load_dotenv()
 from app.utils.database import connect_to_mongo, close_mongo, get_db
 
 from app.ml.engine import ml_engine
-from app.routes import auth, products, interactions, recommendations, cart, orders, profile
+from app.routes import auth, products, interactions, recommendations, cart, orders, profile, chat
 from app.schemas.schemas import HealthResponse
 from app.utils.logger import get_logger
 
@@ -137,7 +137,7 @@ app.include_router(recommendations.router, prefix=PREFIX)
 app.include_router(cart.router, prefix=PREFIX)
 app.include_router(orders.router, prefix=PREFIX)
 app.include_router(profile.router, prefix=PREFIX)
-
+app.include_router(chat.router, prefix=PREFIX)
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check():

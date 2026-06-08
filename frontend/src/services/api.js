@@ -27,11 +27,16 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       window.dispatchEvent(new CustomEvent('auth:expired'))
     }
-    const msg =
-      error.response?.data?.detail ||
-      error.response?.data?.message ||
-      error.message ||
-      'Unexpected error'
+    let msg = 'API Error'
+    if (error.response?.data?.detail) {
+      if (Array.isArray(error.response.data.detail)) {
+        msg = error.response.data.detail.map(d => d.msg).join(', ')
+      } else {
+        msg = error.response.data.detail
+      }
+    } else if (error.message) {
+      msg = error.message
+    }
     return Promise.reject(new Error(msg))
   }
 )
@@ -87,4 +92,7 @@ export const updateProfile = (data) => api.put('/api/v1/profile', data).then((r)
 
 export const getHealth = () => api.get('/health').then((r) => r.data)
 
+// ── Chat (protected) ──────────────────────────────────────────────────────────
+export const sendChatMessage = (query, session_id = null) => 
+  api.post('/api/v1/chat/', { query, session_id }).then((r) => r.data)
 export default api

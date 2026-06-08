@@ -16,7 +16,8 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 VALID_CATEGORIES = [
     "Electronics", "Books", "Clothing", "Home & Kitchen",
-    "Sports & Outdoors", "Beauty & Personal Care"
+    "Sports & Outdoors", "Beauty & Personal Care",
+    "Mobiles", "Laptops", "Clothes", "Shoes", "Watches", "Bags", "Toys"
 ]
 
 
@@ -34,7 +35,7 @@ def list_products(
     min_price: Optional[float] = Query(None, ge=0),
     max_price: Optional[float] = Query(None, ge=0),
     skip: int = Query(0, ge=0),
-    limit: int = Query(24, ge=1, le=100),
+    limit: int = Query(24, ge=1, le=1000),
     db: Database = Depends(get_db),
 ):
     """

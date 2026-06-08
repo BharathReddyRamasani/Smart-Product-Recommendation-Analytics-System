@@ -24,6 +24,9 @@ services:
       - SEED_ON_STARTUP=true
       - LOG_LEVEL=INFO
       - CORS_ORIGINS=*
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - chroma-data:/app/chroma_db
     depends_on:
       - mongodb
     healthcheck:
@@ -32,6 +35,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+      
     restart: unless-stopped
 
   frontend:
@@ -50,3 +54,4 @@ services:
 
 volumes:
   mongo-data:
+  chroma-data:

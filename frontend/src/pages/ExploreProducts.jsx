@@ -39,7 +39,7 @@ export default function ExploreProducts() {
       category: activeCategory || undefined,
       min_price: priceRange?.min ?? undefined,
       max_price: priceRange?.max ?? undefined,
-      limit: 48,
+      limit: 1000,
     })
       .then(setProducts)
       .catch((e) => setError(e.message))

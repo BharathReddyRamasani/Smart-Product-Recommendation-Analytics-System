@@ -156,10 +156,16 @@ class MLEngine:
         """Return product IDs interacted by user, weighted-ordered (purchases first)."""
         records = [r for r in self._interactions_cache if r["user_id"] == user_id]
         # Sort by interaction weight desc, then by timestamp desc
+        def get_ts_str(x):
+            ts = x.get("timestamp")
+            if hasattr(ts, "isoformat"):
+                return ts.isoformat()
+            return str(ts) if ts else ""
+
         records.sort(
             key=lambda x: (
                 INTERACTION_WEIGHTS.get(x["interaction_type"], 1),
-                x.get("timestamp") or "",
+                get_ts_str(x),
             ),
             reverse=True,
         )
