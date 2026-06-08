@@ -125,8 +125,10 @@ Response:"""
         if not self.collection:
             return []
 
+        query_embedding = self.embeddings.embed_query(query)
+        
         results = self.collection.query(
-            query_texts=[query],
+            query_embeddings=[query_embedding],
             n_results=top_k
         )
         
