@@ -28,8 +28,8 @@ COLD_START_THRESHOLD = 5      # < 5 → popularity
 CONTENT_THRESHOLD = 20        # 5-19 → content-based
 # ≥ 20 → hybrid (60% CF + 30% content + 10% trending)
 
-HYBRID_CF_WEIGHT = 0.60
-HYBRID_CONTENT_WEIGHT = 0.30
+HYBRID_CF_WEIGHT = 0.70
+HYBRID_CONTENT_WEIGHT = 0.20
 HYBRID_TRENDING_WEIGHT = 0.10
 
 INTERACTION_WEIGHTS = {"view": 1, "add_to_cart": 3, "purchase": 5}
@@ -43,7 +43,7 @@ class MLEngine:
         self._popularity = PopularityRecommender()
         self._content_based = ContentBasedRecommender()
         self._collaborative = CollaborativeFilteringRecommender()
-        self._svd = SVDRecommender(n_factors=50)
+        self._svd = SVDRecommender(n_factors=100)
         self._is_ready: bool = False
         self._interactions_cache: list[dict] = []
         self._products_cache: list[dict] = []
@@ -282,7 +282,14 @@ class MLEngine:
         if not self._is_ready:
             return {"error": "Engine not ready"}
         user_products: dict[str, list[str]] = {}
-        for r in sorted(self._interactions_cache, key=lambda x: x.get("timestamp") or ""):
+
+        def get_ts_str(x):
+            ts = x.get("timestamp")
+            if hasattr(ts, "isoformat"):
+                return ts.isoformat()
+            return str(ts) if ts else ""
+
+        for r in sorted(self._interactions_cache, key=get_ts_str):
             uid, pid = r["user_id"], r["product_id"]
             if uid not in user_products:
                 user_products[uid] = []

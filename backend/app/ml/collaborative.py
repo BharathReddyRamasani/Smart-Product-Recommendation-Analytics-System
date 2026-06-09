@@ -87,7 +87,7 @@ class CollaborativeFilteringRecommender:
         self,
         user_id: str,
         k: int = 10,
-        n_similar_users: int = 20,
+        n_similar_users: int = 50,
         exclude_product_ids: list[str] | None = None,
     ) -> List[Tuple[str, float]]:
         """
