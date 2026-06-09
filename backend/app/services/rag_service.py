@@ -97,7 +97,7 @@ class RAGService:
         self.embeddings = RESTGeminiEmbeddings(api_key=api_key)
         self.llm = RESTGeminiChat(
             api_key=api_key,
-            model="gemini-2.5-flash", 
+            model="gemini-1.5-flash", 
             temperature=0.7
         )
         
