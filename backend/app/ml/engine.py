@@ -29,9 +29,9 @@ CONTENT_THRESHOLD = 10        # 2-9 → content-based
 # ≥ 20 → hybrid (60% CF + 30% content + 10% trending)
 
 HYBRID_CF_WEIGHT = 0.20
-HYBRID_SVD_WEIGHT = 0.30
-HYBRID_CONTENT_WEIGHT = 0.40
-HYBRID_TRENDING_WEIGHT = 0.10
+HYBRID_SVD_WEIGHT = 0.15
+HYBRID_CONTENT_WEIGHT = 0.60
+HYBRID_TRENDING_WEIGHT = 0.05
 
 INTERACTION_WEIGHTS = {"view": 1, "add_to_cart": 3, "purchase": 5}
 
@@ -227,7 +227,7 @@ class MLEngine:
     ) -> list[tuple[str, float]]:
         """
         Merge ranked lists with explicit weights:
-        20% Collaborative + 30% SVD + 40% Content-Based + 10% Trending
+        20% Collaborative + 15% SVD + 60% Content-Based + 5% Trending
         """
         score_map: dict[str, float] = defaultdict(float)
         for pid, score in cf_results:
