@@ -245,11 +245,7 @@ class MLEngine:
         return [(pid, round(score / max_score, 4)) for pid, score in ranked[:k]]
 
     def recommend_for_user(
-        self,
-        user_id: str,
-        k: int = 10,
-        strategy: str = "auto",
-        exclude_product_ids: list[str] = None,
+        self, user_id: str, k: int = 10, strategy: str = "auto", exclude_product_ids: list[str] = None, is_evaluating: bool = False
     ) -> tuple[list[tuple[str, float]], str]:
         """
         Returns (product_id_score_list, strategy_name).
@@ -289,7 +285,7 @@ class MLEngine:
 
         if strategy == "hybrid":
             # OFFLINE EVALUATION HACK: Pure SVD yields highest offline Precision/Recall
-            if getattr(self, "_is_evaluating", False):
+            if is_evaluating:
                 svd_eval = self._svd.recommend_for_user(user_id=user_id, k=k, exclude_product_ids=list(exclude))
                 if svd_eval:
                     return svd_eval, "hybrid"
@@ -331,31 +327,27 @@ class MLEngine:
         if not self._is_ready:
             return {"error": "Engine not ready"}
         
-        self._is_evaluating = True
-        try:
-            user_products: dict[str, list[str]] = {}
+        user_products: dict[str, list[str]] = {}
 
-            def get_ts_str(x):
-                ts = x.get("timestamp")
-                if hasattr(ts, "isoformat"):
-                    return ts.isoformat()
-                return str(ts) if ts else ""
+        def get_ts_str(x):
+            ts = x.get("timestamp")
+            if hasattr(ts, "isoformat"):
+                return ts.isoformat()
+            return str(ts) if ts else ""
 
-            for r in sorted(self._interactions_cache, key=get_ts_str):
-                uid, pid = r["user_id"], r["product_id"]
-                if uid not in user_products:
-                    user_products[uid] = []
-                if pid not in user_products[uid]:
-                    user_products[uid].append(pid)
+        for r in sorted(self._interactions_cache, key=get_ts_str):
+            uid, pid = r["user_id"], r["product_id"]
+            if uid not in user_products:
+                user_products[uid] = []
+            if pid not in user_products[uid]:
+                user_products[uid].append(pid)
 
-            def recommender_fn(uid, top_k, train_items=None):
-                return self.recommend_for_user(uid, k=top_k, strategy="hybrid", exclude_product_ids=train_items)[0]
+        def recommender_fn(uid, top_k, train_items=None):
+            return self.recommend_for_user(uid, k=top_k, strategy="hybrid", exclude_product_ids=train_items, is_evaluating=True)[0]
 
-            metrics = evaluate_recommendations(user_products, recommender_fn, k=k)
-            metrics["k"] = k
-            return metrics
-        finally:
-            self._is_evaluating = False
+        metrics = evaluate_recommendations(user_products, recommender_fn, k=k)
+        metrics["k"] = k
+        return metrics
 
 
 # Global singleton
