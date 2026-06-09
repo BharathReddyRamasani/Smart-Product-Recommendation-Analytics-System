@@ -28,9 +28,9 @@ COLD_START_THRESHOLD = 2      # < 2 → popularity
 CONTENT_THRESHOLD = 10        # 2-9 → content-based
 # ≥ 20 → hybrid (60% CF + 30% content + 10% trending)
 
-HYBRID_CF_WEIGHT = 0.40
+HYBRID_CF_WEIGHT = 0.20
 HYBRID_SVD_WEIGHT = 0.30
-HYBRID_CONTENT_WEIGHT = 0.20
+HYBRID_CONTENT_WEIGHT = 0.40
 HYBRID_TRENDING_WEIGHT = 0.10
 
 INTERACTION_WEIGHTS = {"view": 1, "add_to_cart": 3, "purchase": 5}
@@ -196,9 +196,9 @@ class MLEngine:
         return sum(1 for r in self._interactions_cache if r["user_id"] == user_id)
 
     def _interacted_products(self, user_id: str) -> list[str]:
-        """Return product IDs interacted by user, weighted-ordered (purchases first)."""
+        """Return product IDs interacted by user, chronologically ordered (most recent first)."""
         records = [r for r in self._interactions_cache if r["user_id"] == user_id]
-        # Sort by interaction weight desc, then by timestamp desc
+        # Sort purely by timestamp desc, ensuring [:5] gets the absolute most recent items
         def get_ts_str(x):
             ts = x.get("timestamp")
             if hasattr(ts, "isoformat"):
@@ -206,10 +206,7 @@ class MLEngine:
             return str(ts) if ts else ""
 
         records.sort(
-            key=lambda x: (
-                INTERACTION_WEIGHTS.get(x["interaction_type"], 1),
-                get_ts_str(x),
-            ),
+            key=lambda x: get_ts_str(x),
             reverse=True,
         )
         seen, result = set(), []
@@ -230,7 +227,7 @@ class MLEngine:
     ) -> list[tuple[str, float]]:
         """
         Merge ranked lists with explicit weights:
-        40% Collaborative + 30% SVD + 20% Content-Based + 10% Trending
+        20% Collaborative + 30% SVD + 40% Content-Based + 10% Trending
         """
         score_map: dict[str, float] = defaultdict(float)
         for pid, score in cf_results:
