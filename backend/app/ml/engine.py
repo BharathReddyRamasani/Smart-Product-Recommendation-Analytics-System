@@ -28,7 +28,8 @@ COLD_START_THRESHOLD = 2      # < 2 → popularity
 CONTENT_THRESHOLD = 10        # 2-9 → content-based
 # ≥ 20 → hybrid (60% CF + 30% content + 10% trending)
 
-HYBRID_CF_WEIGHT = 0.70
+HYBRID_CF_WEIGHT = 0.40
+HYBRID_SVD_WEIGHT = 0.30
 HYBRID_CONTENT_WEIGHT = 0.20
 HYBRID_TRENDING_WEIGHT = 0.10
 
@@ -225,10 +226,11 @@ class MLEngine:
         content_results: list[tuple[str, float]],
         popular_results: list[tuple[str, float]],
         k: int,
+        svd_results: list[tuple[str, float]] = None,
     ) -> list[tuple[str, float]]:
         """
-        Merge three ranked lists with explicit weights:
-        60% Collaborative + 30% Content-Based + 10% Trending
+        Merge ranked lists with explicit weights:
+        40% Collaborative + 30% SVD + 20% Content-Based + 10% Trending
         """
         score_map: dict[str, float] = defaultdict(float)
         for pid, score in cf_results:
@@ -237,6 +239,9 @@ class MLEngine:
             score_map[pid] += HYBRID_CONTENT_WEIGHT * score
         for pid, score in popular_results:
             score_map[pid] += HYBRID_TRENDING_WEIGHT * score
+        if svd_results:
+            for pid, score in svd_results:
+                score_map[pid] += HYBRID_SVD_WEIGHT * score
 
         ranked = sorted(score_map.items(), key=lambda x: x[1], reverse=True)
         max_score = ranked[0][1] if ranked else 1.0
@@ -287,13 +292,12 @@ class MLEngine:
 
         if strategy == "hybrid":
             cf = self._collaborative.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
-            if not cf:
-                cf = self._svd.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
+            svd = self._svd.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
             content = self._content_based.recommend_for_user(
                 interacted_product_ids=interacted, k=k * 2, exclude_product_ids=list(exclude)
             )
             popular = self._popularity.recommend(k=k * 2, exclude_product_ids=list(exclude))
-            merged = self._merge_hybrid(cf, content, popular, k=k)
+            merged = self._merge_hybrid(cf, content, popular, k=k, svd_results=svd)
             if not merged:
                 merged = popular[:k]
                 return merged, "popularity"
