@@ -17,7 +17,7 @@ INTERACTION_WEIGHTS = {"view": 1, "add_to_cart": 3, "purchase": 5}
 class SVDRecommender:
     """Matrix factorization recommender using truncated SVD."""
 
-    def __init__(self, n_factors: int = 50) -> None:
+    def __init__(self, n_factors: int = 20) -> None:
         self._n_factors = n_factors
         self._user_ids: list[str] = []
         self._product_ids: list[str] = []

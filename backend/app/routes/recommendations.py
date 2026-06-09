@@ -23,7 +23,7 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 router = APIRouter(tags=["Recommendations"])
 
-COLD_START_THRESHOLD = 5   # < 5 interactions → popularity
+COLD_START_THRESHOLD = 2   # < 2 interactions → popularity
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────

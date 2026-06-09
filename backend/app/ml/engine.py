@@ -24,8 +24,8 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-COLD_START_THRESHOLD = 5      # < 5 → popularity
-CONTENT_THRESHOLD = 20        # 5-19 → content-based
+COLD_START_THRESHOLD = 2      # < 2 → popularity
+CONTENT_THRESHOLD = 10        # 2-9 → content-based
 # ≥ 20 → hybrid (60% CF + 30% content + 10% trending)
 
 HYBRID_CF_WEIGHT = 0.70
@@ -43,7 +43,7 @@ class MLEngine:
         self._popularity = PopularityRecommender()
         self._content_based = ContentBasedRecommender()
         self._collaborative = CollaborativeFilteringRecommender()
-        self._svd = SVDRecommender(n_factors=100)
+        self._svd = SVDRecommender(n_factors=20)
         self._is_ready: bool = False
         self._interactions_cache: list[dict] = []
         self._products_cache: list[dict] = []
@@ -136,13 +136,55 @@ class MLEngine:
     def _batch_recompute(self) -> None:
         """Background thread to recompute heavy models on a batch schedule."""
         try:
+            from app.utils.database import get_db
+            db = get_db()
+            if not db:
+                logger.error("MLEngine: No DB connection available for batch recompute.")
+                return
+
+            products = list(db.products.find({}))
+            interactions = list(db.interactions.find({}))
+
+            product_dicts = []
+            for p in products:
+                features = p.get("features", [])
+                features_str = " ".join(features) if isinstance(features, list) else str(features)
+                product_dicts.append({
+                    "id": str(p["_id"]),
+                    "name": p.get("name", ""),
+                    "category": p.get("category", ""),
+                    "description": p.get("description", ""),
+                    "features": features_str,
+                    "brand": p.get("brand", ""),
+                    "price": p.get("price", 0),
+                    "rating": p.get("rating", 0),
+                })
+
+            interaction_dicts = []
+            for i in interactions:
+                interaction_dicts.append({
+                    "user_id": str(i["user_id"]),
+                    "product_id": str(i["product_id"]),
+                    "interaction_type": i.get("interaction_type", "view"),
+                    "rating": i.get("rating"),
+                    "timestamp": i.get("timestamp"),
+                })
+
+            # Train new instances to avoid blocking during heavy computation
+            new_content_based = ContentBasedRecommender().fit(product_dicts)
+            new_collaborative = CollaborativeFilteringRecommender().fit(interaction_dicts)
+            new_svd = SVDRecommender(n_factors=20).fit(interaction_dicts)
+            new_popularity = PopularityRecommender().fit(interaction_dicts)
+
             with self._lock:
-                # Copy cache to prevent blocking API reads during heavy matrix operations
-                local_cache = list(self._interactions_cache)
+                self._products_cache = product_dicts
+                self._interactions_cache = interaction_dicts
+                self._content_based = new_content_based
+                self._collaborative = new_collaborative
+                self._svd = new_svd
+                self._popularity = new_popularity
                 
-            self._collaborative.fit(local_cache)
-            self._svd.fit(local_cache)
-            logger.info("MLEngine: Batch recompute completed successfully.")
+            logger.info("MLEngine: Dynamic batch recompute and model swap completed successfully.")
         except Exception as e:
             logger.error(f"MLEngine: Batch recompute failed: {e}")
         finally:
@@ -211,9 +253,9 @@ class MLEngine:
         Returns (product_id_score_list, strategy_name).
 
         Strategy auto-selection:
-          < 5 interactions  → popularity
-          5–19 interactions → content-based
-          ≥ 20 interactions → hybrid (60% CF + 30% content + 10% trending)
+          < 2 interactions  → popularity
+          2–9 interactions → content-based
+          ≥ 10 interactions → hybrid (60% CF + 30% content + 10% trending)
         """
         if not self._is_ready:
             return [], "not_ready"

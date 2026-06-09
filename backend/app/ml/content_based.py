@@ -36,7 +36,7 @@ class ContentBasedRecommender:
         self._similarity_matrix: np.ndarray | None = None
         self._vectorizer = TfidfVectorizer(
             analyzer="word",
-            ngram_range=(1, 2),          # Unigrams and bigrams
+            ngram_range=(1, 3),          # Unigrams, bigrams, and trigrams
             min_df=1,
             max_df=0.95,
             sublinear_tf=True,           # Apply log normalization
