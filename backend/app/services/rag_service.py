@@ -61,10 +61,23 @@ class RESTGeminiChat(BaseChatModel):
             "generationConfig": {"temperature": self.temperature}
         }
 
-        response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=20)
-        if response.status_code != 200:
-            raise Exception(f"Gemini API Error: {response.text}")
+        import time
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=20)
             
+            if response.status_code == 200:
+                break
+                
+            # If we hit high demand (503) or rate limits (429), we wait and retry
+            if response.status_code in [503, 429] and attempt < max_retries - 1:
+                time.sleep(2 ** attempt) # Exponential backoff: 1s, 2s, 4s
+                continue
+                
+            if attempt == max_retries - 1 or response.status_code not in [503, 429]:
+                raise Exception(f"Gemini API Error (Status {response.status_code}): {response.text}")
+                
         data = response.json()
         try:
             content = data["candidates"][0]["content"]["parts"][0]["text"]
