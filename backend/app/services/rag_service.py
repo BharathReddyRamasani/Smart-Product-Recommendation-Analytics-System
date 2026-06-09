@@ -116,7 +116,7 @@ Instructions:
 2. Explain WHY these products are a good fit for the user based on their query.
 3. If the context does not contain relevant products, kindly apologize and say we don't have exactly what they are looking for, but suggest alternatives if possible.
 4. Keep the tone conversational, friendly, and helpful.
-5. CRITICAL: If the user's query contains explicit, inappropriate, NSFW topics, or is wildly irrelevant to our store's products (e.g. asking for adult content), you MUST strictly refuse to fulfill the request. Reply ONLY with: "I'm sorry, but I can only assist you with finding items from our store catalog, such as electronics, clothing, and books." Do not suggest any products in this case.
+5. CRITICAL: If the user's query is inappropriate or completely unrelated to our e-commerce store catalog, you MUST strictly refuse to fulfill the request. Reply ONLY with: "I'm sorry, but I can only assist you with finding items from our store catalog, such as electronics, clothing, and books." Do not suggest any products in this case.
 
 Response:"""
         )
