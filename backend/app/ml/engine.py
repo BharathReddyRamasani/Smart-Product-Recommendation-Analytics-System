@@ -283,7 +283,7 @@ class MLEngine:
 
         if strategy == "content":
             results = self._content_based.recommend_for_user(
-                interacted_product_ids=interacted, k=k, exclude_product_ids=list(exclude)
+                interacted_product_ids=interacted[:5], k=k, exclude_product_ids=list(exclude)
             )
             if not results:
                 results = self._popularity.recommend(k=k, exclude_product_ids=list(exclude))
@@ -294,7 +294,7 @@ class MLEngine:
             cf = self._collaborative.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
             svd = self._svd.recommend_for_user(user_id=user_id, k=k * 2, exclude_product_ids=list(exclude))
             content = self._content_based.recommend_for_user(
-                interacted_product_ids=interacted, k=k * 2, exclude_product_ids=list(exclude)
+                interacted_product_ids=interacted[:5], k=k * 2, exclude_product_ids=list(exclude)
             )
             popular = self._popularity.recommend(k=k * 2, exclude_product_ids=list(exclude))
             merged = self._merge_hybrid(cf, content, popular, k=k, svd_results=svd)

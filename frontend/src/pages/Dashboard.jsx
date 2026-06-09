@@ -162,7 +162,7 @@ export default function Dashboard() {
       <section>
         <h2 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
           <Target size={18} className="text-brand-400" />
-          Model Performance (Collaborative Filtering @ K=10)
+          Model Performance (Hybrid Engine @ K=10)
         </h2>
         {loading ? (
           <div className="flex gap-4">
